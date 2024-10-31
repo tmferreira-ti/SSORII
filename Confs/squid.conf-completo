@@ -1,0 +1,88 @@
+#Determina o IP e porta que o squid vai trabalhar
+http_port 172.17.0.1:3128
+
+#Determina o nome do meu proxy ao realizar um bloqueio (Mensagens de erro)
+visible_hostname Proxy_Fatec
+
+#Esta linha define quanto da memória RAM será usada pelo cache: em um servidor dedicado é recomendado reservar 1/3 da memória RAM para o cache.
+cache_mem 64 MB
+
+#Esta linha é a que realmente define o tamanho total do cache em disco. O endereço refere a que diretório se deseja utilizar como cache, seguido do tamanho máximo do cache no disco (em MB) e os dois últimos números da linha indicam a quantidade de pastas e subpastas que o Squid utilizará para se organizar ao gravar o cache;
+cache_dir ufs /var/spool/squid 1024 128 256
+
+#Determina o arquivo onde serão realizados os registros de log
+access_log /var/log/squid/access.log squid
+logformat MEU_LOG IP do cliente: %>a | Username: %un | Horário: [%tl] | Método: %rm | URL: %ru | Status HTTP: %>Hs | Status Squid: %Ss
+access_log /var/log/squid/gerencia.log MEU_LOG
+
+#omitir a versão do squid em páginas de erro
+httpd_suppress_version_string on
+
+#Define o idioma das páginas de erro apresentas
+error_directory /usr/share/squid/errors/pt-br
+
+#Esta linha define o tamanho máximo dos objetos na RAM. Defina um tamanho pequeno para que sejam salvos apenas páginas html na RAM e não downloads por exemplo, que devem ser salvos no disco.
+maximum_object_size_in_memory 64 KB
+
+#Define o tamanho máximo dos objetos no cache do disco. Aqui serão armazenados os downloads por exemplo. Se tem costume de baixar arquivos grandes, coloque um tamanho grande.
+maximum_object_size 700 MB
+
+#Tamanho mínimo dos objetos no cache.
+minimum_object_size 0 KB
+
+
+#Essas linhas indicam que a partir do momento em que o cache atingir 95%, serão descartados arquivos mais antigos até que a porcentagem volte para um número abaixo de 90%.
+cache_swap_low 90
+cache_swap_high 95
+
+#Esta linha indica o caminho para onde devem ser exportados os logs que depois poderão ser analisados, manualmente, com com algum gerador de relatórios como o SARG.
+
+#Referente aos arquivos de log do armazenamento em cache
+cache_log /var/log/squid/cache.log
+
+
+#####Início ACLs e Regras padrão Squid
+acl SSL_ports port 443		# https
+acl SSL_ports port 563		# snews
+acl SSL_ports port 873		# rsync
+acl Safe_ports port 80		# http
+acl Safe_ports port 21		# ftp
+acl Safe_ports port 443		# https
+acl Safe_ports port 70		# gopher
+acl Safe_ports port 210		# wais
+acl Safe_ports port 1025-65535	# unregistered ports
+acl Safe_ports port 280		# http-mgmt
+acl Safe_ports port 488		# gss-http
+acl Safe_ports port 591		# filemaker
+acl Safe_ports port 777		# multiling http
+acl Safe_ports port 631		# cups
+acl Safe_ports port 873		# rsync
+acl Safe_ports port 901		# SWAT
+acl purge method PURGE
+acl CONNECT method CONNECT
+
+http_access deny manager
+http_access allow purge localhost
+http_access deny purge
+http_access deny !Safe_ports
+http_access deny CONNECT !SSL_ports
+http_access allow localhost
+
+#####Fim ACLs e Regras padrão Squid
+
+###### Minhas ACL's ######
+acl REDE_INTERNA src 172.17.0.0/24
+acl REDES_SOCIAIS url_regex facebook twitter tiktok
+acl HORARIO_ALMOCO time MTWHF 12:00-13:00
+acl UOL dstdomain .uol.com.br
+###########################
+
+
+###### Minhas regras ######
+http_access deny REDES_SOCIAIS !HORARIO_ALMOCO
+http_access deny UOL
+http_access allow REDE_INTERNA
+###########################
+
+#Proibimos que pessoas fora da nossa rede usem nosso proxy.
+http_access deny all
