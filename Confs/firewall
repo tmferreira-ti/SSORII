@@ -30,6 +30,13 @@ case $1 in
 		iptables -A INPUT -p tcp --dport 22 -s 192.168.56.1 -d 192.168.56.200 -j ACCEPT
 		iptables -A OUTPUT -p tcp --sport 22 -s 192.168.56.200 -d 192.168.56.1 -j ACCEPT
 
+
+		#Permitindo a máquina firewall acessar a internet
+		iptables -A OUTPUT -o enp0s9 -j ACCEPT
+
+		#Permitindo acesso a porta 3128 (Squid)
+		iptables -A INPUT -p tcp --dport 3128 -s 172.17.0.0/24 -j ACCEPT
+
 		#Alterar políticas padrão das cadeias INPUT/OUTPUT/FORWARD
 		iptables -P INPUT DROP
 		iptables -P OUTPUT DROP
