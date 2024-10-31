@@ -10,5 +10,5 @@ chmod +x /etc/init.d/firewall
 systemctl enable firewall.service
 
 echo "Finalizado..."
-Sleep 1
+sleep 1
 reboot
