@@ -1,3 +1,8 @@
+#auth_param basic program /usr/lib/squid/basic_ncsa_auth #/etc/squid/passwd 
+#auth_param basic children 5
+#auth_param basic realm >>> Squid - POR FAVOR, IDENTIFIQUE-SE! <<< 
+#auth_param basic credentialsttl 2 hours
+
 #Determina o IP e porta que o squid vai trabalhar
 http_port 172.17.0.1:3128
 
@@ -71,6 +76,7 @@ http_access allow localhost
 #####Fim ACLs e Regras padrão Squid
 
 ###### Minhas ACL's ######
+#acl AUTENTICADOS proxy_auth REQUIRED
 acl REDE_INTERNA src 172.17.0.0/24
 acl REDES_SOCIAIS url_regex facebook twitter tiktok
 acl HORARIO_ALMOCO time MTWHF 12:00-13:00
@@ -79,6 +85,7 @@ acl UOL dstdomain .uol.com.br
 
 
 ###### Minhas regras ######
+#http_access deny !AUTENTICADOS
 http_access deny REDES_SOCIAIS !HORARIO_ALMOCO
 http_access deny UOL
 http_access allow REDE_INTERNA
